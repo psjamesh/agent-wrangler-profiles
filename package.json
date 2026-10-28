@@ -1,0 +1,22 @@
+{
+  "name": "agent-wrangler-profiles",
+  "version": "1.0.0",
+  "description": "Save named sets of tasks and switch the board between them.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "test:board": "node test/board.mjs"
+  },
+  "engines": { "node": ">=20" },
+  "wranglerExtension": {
+    "id": "profiles",
+    "label": "Profiles",
+    "description": "Save named sets of tasks and switch the board between them.",
+    "author": "Profiles contributors",
+    "requires": ["tasks:read", "board:rebuild", "board:broadcast"],
+    "engines": { "wranglerApi": "^1.53.0" }
+  },
+  "dependencies": { "write-file-atomic": "^6.0.0" },
+  "devDependencies": { "jsdom": "^26.1.0", "playwright": "^1.56.1" }
+}

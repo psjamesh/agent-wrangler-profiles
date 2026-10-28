@@ -70,7 +70,8 @@ profile as a grid of checkboxes (task rows, profile columns). From it the person
 
 Changes apply when the dialog is saved. If a selected profile's membership changed, the view
 recomputes then. Opened from a task's **Manage profiles…** menu entry, the dialog is the same but scrolls
-to and highlights that task's row.
+to and highlights that task's row. Right-clicking blank space in the task view also offers
+**Manage profiles…** beside **New task**; it opens the same dialog without a highlighted row.
 
 ### The task tile
 
@@ -94,24 +95,22 @@ current view. It joins no profile until the person adds it.
 A profile's archived or deleted tasks drop out of it quietly. If a profile selection leaves no live
 tasks, every task is shown (core already refuses to minimise the last visible tile).
 
-## Constraints and what exists today
+## Host contract
 
-- The minimised set is browser view state in `public/app.js` (`localStorage` key
-  `aw.minimisedTaskIds`), not server state. The tray is drawn by core in `public/app.js`
-  (the `tray-pills` strip with **Restore all**).
-- Extensions today can minimise one task (`api.minimiseTask`, 1.11.0) and restore one
-  (`api.openTask`, 1.24.0). They cannot set the whole minimised set at once, hide tasks from the
-  tray, replace the tray, or remove core's Minimise. See `docs/extensions.md`.
-- Core's Minimise is in both the task header menu and the tile's right-click menu. An existing
-  mechanism drops the legacy `minimise-task` extension's item to avoid a duplicate; it does not
-  let an extension remove core's own.
+- The minimised set is browser view state in core (`localStorage` key `aw.minimisedTaskIds`).
+- Host API **1.53.0** provides `board.tray`, `api.setMinimisedTasks(ids)` and the tray owner's
+  `minimiseItem` and `backgroundItem` menu hooks. Both Profiles manifest declarations require
+  `^1.53.0`.
+- The tray receives ordered live tasks including Unassigned, and the authoritative minimised set.
+  Only its mounted owner replaces Minimise in both task menus and adds Manage profiles… beside
+  New task in the blank-space menu. Focus stays available.
 
 ## Where it lives
 
 This is a new **community extension**, installable from its own public repository in the
 `psjamesh` GitHub namespace (working name `psjamesh/agent-wrangler-profiles`, following the
 existing `agent-wrangler-<name>` repositories). It is not a built-in extension. Its manifest
-declares `engines.wranglerApi` at the host API version that ships the core changes below.
+declares `engines.wranglerApi` at `^1.53.0`, the host API version that provides the core contract below.
 
 Delivery is two pieces, in order:
 
@@ -119,16 +118,17 @@ Delivery is two pieces, in order:
    host API minor version and documenting the additions in `docs/extensions.md`.
 2. The extension repository, built against that version.
 
-## Core changes required
+## Core API
 
-Additions to the client extension API, as a minor host API bump:
+Host API 1.53.0 supplies these additions to the client extension API:
 
 1. A **tray slot**: an extension may draw the tray strip. When an enabled extension contributes
    it, core's strip is not drawn; when none does, today's tray is unchanged.
 2. **`api.setMinimisedTasks(ids)`**: replaces the minimised set in one render, keeping core's
    guard that the board never empties and its pruning of ids that name no live tile.
 3. A way for the extension that owns the tray to **replace core's Minimise menu entry** with its own
-   (**Manage profiles…**) in both the three-dots menu and the right-click menu.
+   (**Manage profiles…**) in both the three-dots menu and the right-click menu. Its background
+   menu hook also adds **Manage profiles…** beside **New task**, without a task target.
 
 ## Designer's calls (not discussed with the person; change freely)
 
@@ -163,7 +163,7 @@ Additions to the client extension API, as a minor host API bump:
   everything, with an always-present **All** pill as the visible way back to that state and the
   only way to reach tasks that are in no profile.
 - One Manage profiles dialog for everything, opened from the cog in the strip and from
-  Manage profiles… in each task's menu.
+  Manage profiles… in each task's menu, and the blank task-view right-click menu.
 - Manage profiles… replaces the Minimise entry in the task menus while the extension is on. The
   tile header gets no new button or icon.
 - The strip shows every profile as a pill, like today's minimised-task pills, with no More list.
